@@ -40,23 +40,24 @@ def background_thread(args):
     while True:
         if args:
           A = dict(args).get('A')
-          dbV = dict(args).get('db_value')
+          dbV = dict(args).get('btn_value')
         else:
           A = 1
-          dbV = 'nieco'  
+          dbV = 'nieco'
+          
+        dbV = dict(args).get('btn_value')  
         print(args)  
         socketio.sleep(2)
         count += 1
         dataCounter +=1
         print(float(ser.readline()))
-        if dbV == 'start':
+        print(dbV)
+        if dbV == 1:
           dataDict = {
-            "t": time.time(),
             "x": dataCounter,
-            "y": float(ser.readline()),
-            "z": float(ser.readline())}
+            "y": float(ser.readline())}
           dataList.append(dataDict)
-        else:
+        elif dbV == 0:
           if len(dataList)>0:
             print(str(dataList))
             fuj = str(dataList).replace("'", "\"")
@@ -65,15 +66,18 @@ def background_thread(args):
             print("INSERTING INTO")
             
             cursor = db.cursor()
-            cursor.execute("SELECT MAX(id) FROM semestralka")
-            maxid = cursor.fetchone()
-            cursor.execute("INSERT INTO semestralka (value) VALUES (%s)", (fuj))
+            cursor.execute("INSERT INTO semestralka (value) VALUES (%s);", fuj)
             db.commit()
+            
+            fo = open("static/files/test.txt","a+")
+            fo.write("%s\r\n" %fuj)
           dataList = []
           dataCounter = 0
-        socketio.emit('my_response',
-                      {'data': float(ser.readline()), 'count': count},
-                      namespace='/test')  
+        if dbV == 1:
+            print(dbV)
+            socketio.emit('my_response',
+                  {'data': float(ser.readline()), 'count': count},
+                  namespace='/test')  
     db.close()
 
 @app.route('/')
@@ -131,6 +135,17 @@ def test_connect():
             thread = socketio.start_background_task(target=background_thread, args=session._get_current_object())
    # emit('my_response', {'data': 'Connected', 'count': 0})
 
+@socketio.on('click_eventStart', namespace='/test')
+def db_message(message):   
+    session['btn_value'] = 1
+    #print(session['click_eventStart'])
+    #print(session)
+
+@socketio.on('click_eventStop', namespace='/test')
+def db_message(message):   
+    session['btn_value'] = 0
+    #print(session['click_eventStop'])
+    #print(session)
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():

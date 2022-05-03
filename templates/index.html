@@ -67,7 +67,7 @@
               yaxis: {title: "y"},
               title: "data"
             };
-
+         
           namespace = '/test';
           var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
          
@@ -86,30 +86,25 @@
             }];
             
             gauge.value = msg.data;
-   
+         
             xAx.push(parseFloat(msg.count));
             
             yAx.push(parseFloat(msg.data));
-        
-            console.log(data);
+         
             Plotly.newPlot("plotdiv", data, layout);
           });
          
           $('form#emit').submit(function(event) {
               socket.emit('my_event', {value: $('#emit_value').val()});
               return false; });
-          $('#buttonVal').click(function(event) {
-              //console.log($('#buttonVal').val());
-              socket.emit('db_event', {value: $('#buttonVal').val()});
-              if ($(this).val() == "start") {
-                $(this).val("stop");
-                $(this).text("Stop");
-              }
-              else {
-                $(this).val("start");
-                $(this).text("Start");
-              }
-              return false; }); 
+         $('#buttonValStart').click(function(event) {
+             console.log($('#buttonValStart').val());
+             socket.emit('click_eventStart', {value: $('#buttonValStart').val()});
+             return false; });
+         $('#buttonValStop').click(function(event) {
+             console.log($('#buttonValStop').val());
+             socket.emit('click_eventStop', {value: $('#buttonValStop').val()});
+         return false; });
           $('form#disconnect').submit(function(event) {
               socket.emit('disconnect_request');
               return false; });         
@@ -123,7 +118,8 @@
          <input type="text" name="emit_value" id="emit_value" placeholder="Amplituda">
          <input type="submit" value="SEND TO ARDUINO">
       </form>
-      <button id="buttonVal" type="submit" value="start">Start</button>
+      <button id="buttonValStart" type="submit" value="send">Start calculating</button>
+      <button id="buttonValStop" type="submit" value="stop">Stop calculating</button>
       <form id="disconnect" method="POST" action="#">
          <input type="submit" value="Disconnect">
       </form>
