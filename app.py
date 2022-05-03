@@ -27,7 +27,7 @@ socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock() 
 
-ser = serial.Serial("/dev/ttyUSB1", 9600)
+ser = serial.Serial("/dev/ttyUSB0", 9600)
 ser.baudrate=9600
 
 read_ser = ser.readline()
@@ -48,7 +48,6 @@ def background_thread(args):
         socketio.sleep(2)
         count += 1
         dataCounter +=1
-        prem = random.random()
         print(float(ser.readline()))
         if dbV == 'start':
           dataDict = {
@@ -62,6 +61,9 @@ def background_thread(args):
             print(str(dataList))
             fuj = str(dataList).replace("'", "\"")
             print(fuj)
+            
+            print("INSERTING INTO")
+            
             cursor = db.cursor()
             cursor.execute("SELECT MAX(id) FROM semestralka")
             maxid = cursor.fetchone()
@@ -103,7 +105,7 @@ def dbdata(num):
 def test_message(message):   
     session['receive_count'] = session.get('receive_count', 0) + 1 
     session['A'] = message['value']
-    ser.write(message['value'].encode())
+    ser.write(str(message['value']).encode())
     emit('my_response',
          {'data': message['value'], 'count': session['receive_count']})
 
@@ -137,4 +139,5 @@ def test_disconnect():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=80, debug=True)
+
 
