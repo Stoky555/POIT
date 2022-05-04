@@ -9,8 +9,8 @@ void setup()
 void loop(){
   float napetie1, napetie2;
   
-  napetie1=analogRead(A0);
-  napetie2=analogRead(A1);
+  napetie1=(float)analogRead(A0)*5/1023;
+  napetie2=(float)analogRead(A1)*5/1023;
   
   delay(100);
 
