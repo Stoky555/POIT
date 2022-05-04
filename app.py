@@ -59,18 +59,19 @@ def background_thread(args):
           dataList.append(dataDict)
         elif dbV == 0:
           if len(dataList)>0:
-            print(str(dataList))
             fuj = str(dataList).replace("'", "\"")
-            print(fuj)
-            
-            print("INSERTING INTO")
             
             cursor = db.cursor()
-            cursor.execute("INSERT INTO semestralka (value) VALUES (%s);", fuj)
+            
+            query = "INSERT INTO poitSeme (hodnoty) VALUES ('%s')" % (fuj)
+            
+            cursor.execute(query)
             db.commit()
             
             fo = open("static/files/test.txt","a+")
             fo.write("%s\r\n" %fuj)
+            fo.close()
+          
           dataList = []
           dataCounter = 0
         if dbV == 1:
@@ -83,27 +84,6 @@ def background_thread(args):
 @app.route('/')
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
-
-@app.route('/graph', methods=['GET', 'POST'])
-def graph():
-    return render_template('graph.html', async_mode=socketio.async_mode)
-    
-@app.route('/db')
-def db():
-  db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
-  cursor = db.cursor()
-  cursor.execute('''SELECT * FROM  semestralka''')
-  rv = cursor.fetchall()
-  return str(rv)    
-
-@app.route('/dbdata/<string:num>', methods=['GET', 'POST'])
-def dbdata(num):
-  db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
-  cursor = db.cursor()
-  print(num)
-  cursor.execute("SELECT value FROM sesestralka WHERE id=%s", num)
-  rv = cursor.fetchone()
-  return str(rv[0])
     
 @socketio.on('my_event', namespace='/test')
 def test_message(message):   
@@ -113,19 +93,27 @@ def test_message(message):
     emit('my_response',
          {'data': message['value'], 'count': session['receive_count']})
 
-@socketio.on('db_event', namespace='/test')
-def db_message(message):   
-#    session['receive_count'] = session.get('receive_count', 0) + 1 
-    session['db_value'] = message['value']    
-#    emit('my_response',
-#         {'data': message['value'], 'count': session['receive_count']})
-
 @socketio.on('disconnect_request', namespace='/test')
 def disconnect_request():
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
          {'data': 'Disconnected!', 'count': session['receive_count']})
     disconnect()
+
+@app.route('/dbdata/<string:num>', methods=['GET', 'POST'])
+def dbdata(num):
+  db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+  cursor = db.cursor()
+  print(num)
+  cursor.execute("SELECT hodnoty FROM  poitSeme WHERE id=%s", num)
+  rv = cursor.fetchone()
+  return str(rv[0])
+
+@app.route('/read/<string:num>', methods=['GET', 'POST'])
+def readmyfile(num):
+    fo = open("static/files/test.txt","r")
+    rows = fo.readlines()
+    return rows[int(num)-1]
 
 @socketio.on('connect', namespace='/test')
 def test_connect():

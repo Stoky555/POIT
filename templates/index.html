@@ -19,96 +19,185 @@
            var xAx = new Array();
            var yAx = new Array();
            
-             var gauge = new RadialGauge({
-             renderTo: 'canvasid',
-             width: 300,
-             height: 300,
-             units: "km/h",
-             minvalue: 0,
-             maxvalue: 1,
-             majorticks: [
-                 "0",
-                 "0.1",
-                 "0.2",
-                 "0.3",
-                 "0.4",
-                 "0.5",
-                 "0.6",
-                 "0.7",
-                 "0.8",
-                 "0.9",
-                 "1.0"
-             ],
-             minorticks: 2,
-             stroketicks: true,
-             highlights: [
-                 {
-                     "from": 0.5,
-                     "to": 1,
-                     "color": "rgba(200, 50, 50, .75)"
-                 }
-             ],
-             colorplate: "#fff",
-             bordershadowwidth: 0,
-             borders: false,
-             needletype: "arrow",
-             needlewidth: 2,
-             needlecirclesize: 7,
-             needlecircleouter: true,
-             needlecircleinner: false,
-             animationduration: 1500,
-             animationrule: "linear"
-             });
-            gauge.draw();
-         
-            // Define Layout
-            var layout = {
-              xaxis: {title: "x"},
-              yaxis: {title: "y"},
-              title: "data"
-            };
-         
-          namespace = '/test';
-          var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
-         
-          socket.on('connect', function() {
-            socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
-         
-          socket.on('my_response', function(msg) {
-            console.log(msg.data);
-            $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
-            
-            var data = [{
-              x: xAx,
-              y: yAx,
-              mode: "lines",
-              type: "scatter"
-            }];
-            
-            gauge.value = msg.data;
-         
-            xAx.push(parseFloat(msg.count));
-            
-            yAx.push(parseFloat(msg.data));
-         
-            Plotly.newPlot("plotdiv", data, layout);
+          var gauge = new RadialGauge({
+          renderTo: 'canvasid',
+          width: 300,
+          height: 300,
+          units: "km/h",
+          minvalue: 0,
+          maxvalue: 1,
+          majorticks: [
+              "0",
+              "0.1",
+              "0.2",
+              "0.3",
+              "0.4",
+              "0.5",
+              "0.6",
+              "0.7",
+              "0.8",
+              "0.9",
+              "1.0"
+          ],
+          minorticks: 2,
+          stroketicks: true,
+          highlights: [
+              {
+                  "from": 0.5,
+                  "to": 1,
+                  "color": "rgba(200, 50, 50, .75)"
+              }
+          ],
+          colorplate: "#fff",
+          bordershadowwidth: 0,
+          borders: false,
+          needletype: "arrow",
+          needlewidth: 2,
+          needlecirclesize: 7,
+          needlecircleouter: true,
+          needlecircleinner: false,
+          animationduration: 1500,
+          animationrule: "linear"
           });
-         
-          $('form#emit').submit(function(event) {
-              socket.emit('my_event', {value: $('#emit_value').val()});
-              return false; });
+         gauge.draw();
+      
+         // Define Layout
+         var layout = {
+           xaxis: {title: "x"},
+           yaxis: {title: "y"},
+           title: "data"
+         };
+      
+         namespace = '/test';
+         var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+         socket.on('connect', function() {
+         socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
+
+         socket.on('my_response', function(msg) {
+         console.log(msg.data);
+         $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
+
+         var data = [{
+           x: xAx,
+           y: yAx,
+           mode: "lines",
+           type: "scatter"
+         }];
+
+         gauge.value = msg.data;
+
+         xAx.push(parseFloat(msg.count));
+
+         yAx.push(parseFloat(msg.data));
+
+         Plotly.newPlot("plotdiv", data, layout);
+         });
+
+         $('form#emit').submit(function(event) {
+           socket.emit('my_event', {value: $('#emit_value').val()});
+           return false; });
          $('#buttonValStart').click(function(event) {
-             console.log($('#buttonValStart').val());
-             socket.emit('click_eventStart', {value: $('#buttonValStart').val()});
-             return false; });
+          console.log($('#buttonValStart').val());
+          socket.emit('click_eventStart', {value: $('#buttonValStart').val()});
+          return false; });
          $('#buttonValStop').click(function(event) {
-             console.log($('#buttonValStop').val());
-             socket.emit('click_eventStop', {value: $('#buttonValStop').val()});
+          console.log($('#buttonValStop').val());
+          socket.emit('click_eventStop', {value: $('#buttonValStop').val()});
          return false; });
-          $('form#disconnect').submit(function(event) {
-              socket.emit('disconnect_request');
-              return false; });         
-          });
+         $('form#disconnect').submit(function(event) {
+           socket.emit('disconnect_request');
+           return false; });      
+           
+         $('form#recordDb').submit(function(event) {
+                  var layout = {
+          title: 'Vykreslenie priebehu',
+          xaxis: {
+            title: 'count'
+          },
+          yaxis: {
+            title: 'y'
+          }
+        };
+                  
+      var $link = "dbdata/"+$('#valueDb').val();
+      
+    $.ajax({
+      type: "POST",
+      url: $link,
+      success:function(data) 
+      { console.log(data);  
+        data = JSON.parse(data);
+        console.log(data);    
+        n = Object.keys(data).length;
+        console.log(n);
+        
+        xl = [];
+        yl = [];
+        
+        for (var i=0; i< n; i++){
+          xl.push(data[i].x);
+          yl.push(data[i].y); 
+       }
+          
+        var trace = [{
+            x: xl,
+            y: yl}];  
+        
+        console.log("traces", trace);
+        Plotly.newPlot($('#plotdivId')[0],trace,layout);         
+      }
+    }).done(function( o ) {
+       // do something
+    });    
+    
+      return false });
+      
+      $('form#recordFile').submit(function(event) {
+                  var layout = {
+          title: 'Vykreslenie priebehu',
+          xaxis: {
+            title: 'count'
+          },
+          yaxis: {
+            title: 'y'
+          }
+        };
+                  
+      var $link = "read/"+$('#valueFile').val();
+      
+    $.ajax({
+      type: "POST",
+      url: $link,
+      success:function(data) 
+      { console.log(data);  
+        data = JSON.parse(data);
+        console.log(data);    
+        n = Object.keys(data).length;
+        console.log(n);
+        
+        xl = [];
+        yl = [];
+        
+        for (var i=0; i< n; i++){
+          xl.push(data[i].x);
+          yl.push(data[i].y); 
+       }
+          
+        var trace = [{
+            x: xl,
+            y: yl}];  
+        
+        console.log("traces", trace);
+        Plotly.newPlot($('#plotdivRow')[0],trace,layout);         
+      }
+    }).done(function( o ) {
+       // do something
+    });    
+    
+      return false });
+              
+         });
       </script>
    </head>
    <body>
@@ -128,6 +217,8 @@
             <li><a href="#tabs-1">LOG</a></li>
             <li><a href="#tabs-2">GRAF</a></li>
             <li><a href="#tabs-3">CIFERNIK</a></li>
+            <li><a href="#tabs-4">PLOT BY ID DB</a></li>
+            <li><a href="#tabs-5">PLOT BY ROW FILE</a></li>
          </ul>
          <div id="tabs-1">
             <h2>Receive:</h2>
@@ -138,6 +229,22 @@
          </div>
          <div id="tabs-3">
             <canvas id="canvasid"></canvas>
+         </div>
+         <div id="tabs-4">
+            <form id = "recordDb" method="POST" action='#'>
+  <input type="text" name="value" id="valueDb" placeholder="cislo zaznamu v databaze">
+  <input type="submit" value="Set">
+</form>
+            
+            <div id="plotdivId" style="width:600px;height:250px;"></div>
+         </div>
+         
+         <div id="tabs-5">
+            <form id = "recordFile" method="POST" action='#'>
+  <input type="text" name="value" id="valueFile" placeholder="cislo riadku vo file">
+  <input type="submit" value="Set">
+</form>
+            <div id="plotdivRow" style="width:600px;height:250px;"></div>
          </div>
       </div>
    </body>
